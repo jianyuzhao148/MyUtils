@@ -3,7 +3,7 @@ import subprocess
 import xml.etree.ElementTree as ET
 import shutil
 
-from Util.Log import Log
+from Util import Log
 
 plistDict = {}
 plistRefDict = {}
@@ -23,7 +23,11 @@ def get_xml_all_child_node_loop(xml):
     for child in xml:
         if len(child) > 0:
             get_xml_all_child_node_loop(child)
-        if ("Type" in child.attrib) and child.attrib["Type"] == "PlistSubImage" and ("/" not in child.attrib["Plist"]):
+        if (
+            ("Type" in child.attrib)
+            and child.attrib["Type"] == "PlistSubImage"
+            and ("/" not in child.attrib["Plist"])
+        ):
             add_img_to_plist_set(child.attrib["Plist"], child.attrib["Path"])
     return xml
 
@@ -40,7 +44,9 @@ def add_img_to_plist_set(plist_name, img_name):
 
 
 def cut_plist(plist_dir_path, plist_name, out_path):
-    assert os.path.isdir(plist_dir_path), "plistDirPath:" + os.path.abspath(plist_dir_path) + " is not a dir"
+    assert os.path.isdir(plist_dir_path), (
+        "plistDirPath:" + os.path.abspath(plist_dir_path) + " is not a dir"
+    )
     if not os.path.isdir(out_path):
         os.makedirs(out_path)
 
@@ -61,16 +67,37 @@ def cut_plist(plist_dir_path, plist_name, out_path):
                     if not os.path.isdir(out):
                         os.makedirs(out)
                     if copy(os.path.join(root, file), out):
-                        os.rename(os.path.join(out, file), os.path.join(out, item.split("/")[-1]))
+                        os.rename(
+                            os.path.join(out, file),
+                            os.path.join(out, item.split("/")[-1]),
+                        )
                         Log.info(
-                            file + " => " + out_path + os.sep + plist_name.split(".")[0] + os.sep + item.split("/")[0])
+                            file
+                            + " => "
+                            + out_path
+                            + os.sep
+                            + plist_name.split(".")[0]
+                            + os.sep
+                            + item.split("/")[0]
+                        )
                         count = count + 1
                     else:
                         Log.error(
-                            file + " => " + out_path + os.sep + plist_name.split(".")[0] + os.sep + item.split("/")[0])
+                            file
+                            + " => "
+                            + out_path
+                            + os.sep
+                            + plist_name.split(".")[0]
+                            + os.sep
+                            + item.split("/")[0]
+                        )
     Log.info("共" + str(len(imgSet)) + "个文件,命中" + str(count) + "个文件")
     if len(imgSet) != count:
-        Log.warn("警告：有" + str(len(imgSet) - count) + "个文件未命中----------------------------------")
+        Log.warn(
+            "警告：有"
+            + str(len(imgSet) - count)
+            + "个文件未命中----------------------------------"
+        )
         Log.warn(imgSet)
 
 
@@ -78,10 +105,18 @@ def pack_plist(new_path, plist_name):
     path = os.getcwd()
     os.chdir(new_path)
     for size in [[512, 512], [1024, 1024], [1024, 2048], [2048, 2048]]:
-        if subprocess.call("TexturePacker --format cocos2d --texture-format png --data {0}.plist --sheet {0}.png --opt "
-                           "RGBA8888 --max-width {1} --max-height {2} --padding 2 {0}".format(plist_name, size[0],
-                                                                                              size[1])
-                , stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, shell=True) == 0:
+        if (
+            subprocess.call(
+                "TexturePacker --format cocos2d --texture-format png --data {0}.plist --sheet {0}.png --opt "
+                "RGBA8888 --max-width {1} --max-height {2} --padding 2 {0}".format(
+                    plist_name, size[0], size[1]
+                ),
+                stderr=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                shell=True,
+            )
+            == 0
+        ):
             break
 
     flag = os.path.isfile(plist_name + ".plist") and os.path.isfile(plist_name + ".png")
@@ -108,7 +143,6 @@ def copy(src_file, target_path):
 
 
 if __name__ == "__main__":
-
     """csd文件root目录"""
     csbRootPath = "F:\\SLG\\common\\UI-3.10\\cocosstudio\\"
     """client目录"""
@@ -146,3 +180,4 @@ if __name__ == "__main__":
     #
     #     else:
     #         log_error("create plist:" + i + " fail")
+

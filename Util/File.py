@@ -4,12 +4,17 @@ import shutil
 
 import openpyxl
 
-#TODO 需要不断完善
+
+# TODO: 需要不断完善
 class Excel:
     def __init__(self, excel_path: str):
         self.excel_path = excel_path
         self.is_create = os.path.isfile(excel_path)
-        self.workbook: openpyxl.workbook.Workbook = openpyxl.load_workbook(excel_path) if self.is_create else openpyxl.workbook()
+        self.workbook: openpyxl.workbook.Workbook = (
+            openpyxl.load_workbook(excel_path)
+            if self.is_create
+            else openpyxl.workbook()
+        )
 
     def get_sheet_names(self) -> list:
         """
@@ -35,8 +40,6 @@ class Excel:
         self.workbook.close()
 
 
-
-
 # 移动文件
 def copy(file_path, target_path):
     shutil.copyfile(file_path, target_path)
@@ -47,7 +50,7 @@ def replace(file_path: str, old_text: str, new_text: str):
     with open(file_path, "r", encoding="utf-8") as file:
         lines = file.readlines()
 
-    with open(file_path, 'w+', encoding="utf-8") as file:
+    with open(file_path, "w+", encoding="utf-8") as file:
         line = ""
         for i in lines:
             # 转义特殊字符
@@ -63,7 +66,7 @@ def change_file_by_tag(file: str, tag: str, content: str):
     :param tag: 标识
     :param content: 替换的内容
     """
-    assert os.path.isfile(file), "%s not a file".format(file)
+    assert os.path.isfile(file), "{} not a file".format(file)
     file_data = ""
 
     with open(file, "r", encoding="utf-8") as f:
@@ -71,7 +74,7 @@ def change_file_by_tag(file: str, tag: str, content: str):
         is_change_block = False
         is_changed = False
         for line in lines:
-            temp_line = ''.join(line.split())
+            temp_line = "".join(line.split())
             if temp_line == tag + "_START":
                 # 进入修改块
                 is_change_block = True
@@ -89,3 +92,4 @@ def change_file_by_tag(file: str, tag: str, content: str):
             file_data += line
     with open(file, "w", encoding="utf-8") as f:
         f.write(file_data)
+

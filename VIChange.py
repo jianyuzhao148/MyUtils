@@ -19,7 +19,7 @@ class String:
         :param text:
         :return:
         """
-        pattern = re.compile(r'[\u4e00-\u9fff]+')
+        pattern = re.compile(r"[\u4e00-\u9fff]+")
         chinese_chars = re.findall(pattern, text)
         return chinese_chars
 
@@ -53,18 +53,18 @@ class Log:
         print("\033[34m{0}\033[0m".format(msg))
 
 
-def over_call(p):
-    Log.DEBUG("进程：" + str(os.getpid()) + "工作完成")
+def over_call(result):
+    print("进程：" + str(os.getpid()) + "工作完成", result)
 
 
 def error_call(error):
-    print(f'进程:' + str(os.getpid()) + 'Error:', error, flush=True)
+    print("进程:" + str(os.getpid()) + "Error:", error, flush=True)
 
 
 def write_sheet(excel_name, sheet_table: dict):
     number = 0
     Log.INFO("开始转换excel:{}".format(excel_name))
-    workbook: openpyxl.workbook.Workbook = openpyxl.load_workbook(excel_name)
+    workbook: openpyxl.Workbook = openpyxl.load_workbook(excel_name)
     for sheet_name in sheet_table.keys():
         Log.INFO("\t开始转换sheet:{}".format(sheet_name))
         sheet = workbook[sheet_name]
@@ -80,12 +80,12 @@ def write_sheet(excel_name, sheet_table: dict):
 def get_all_sheet(excel_name):
     Log.INFO("开始读取{}".format(excel_name))
     sheet_table: dict = {}
-    workbook: openpyxl.workbook.Workbook = openpyxl.load_workbook(excel_name)
+    workbook: openpyxl.Workbook = openpyxl.load_workbook(excel_name)
     for sheet in workbook:
         sheet_table[sheet.title] = {}
         for i in sheet.iter_rows():
             for j in i:
-                if type(j.value) == str and langid.classify(j.value)[0] == "vi":
+                if isinstance(j.value, str) and langid.classify(j.value)[0] == "vi":
                     Log.INFO("\t\t{}=>{}".format(j.value, String.str2unicode(j.value)))
                     sheet_table[sheet.title][j.coordinate] = String.str2unicode(j.value)
     workbook.close()
@@ -101,25 +101,25 @@ def restore_unicode(file_name):
         if "b'\"" in line:
             try:
                 idx = line.index("b'\"")
-                byte_str = line[idx + 2:-3]
-                temp = eval("u" + "\'" + byte_str + "\'")
+                byte_str = line[idx + 2 : -3]
+                temp = eval("u" + "'" + byte_str + "'")
                 try:
-                    if "\'" in temp:
+                    if "'" in temp:
                         language_str = eval("u" + temp)
-                        language_str = "\"" + language_str + "\""
+                        language_str = '"' + language_str + '"'
                     else:
-                        language_str = eval("u" + "\'" + temp + "\'")
-                except:
+                        language_str = eval("u" + "'" + temp + "'")
+                except BaseException:
                     language_str = eval("u" + temp)
                 Log.INFO("\t\t{}=>{}".format(byte_str, language_str))
                 line = line[:idx] + language_str + line[-2:]
-            except:
+            except BaseException:
                 Log.ERROR(line)
         if "b'{" in line:
             idx = line.index("b'{")
-            byte_str = line[idx + 1:-2]
+            byte_str = line[idx + 1 : -2]
             language_str = eval("u" + byte_str)
-            language_str = eval("u" + "\'" + language_str + "\'")
+            language_str = eval("u" + "'" + language_str + "'")
             Log.INFO("\t\t{}=>{}".format(byte_str, language_str))
             line = line[:idx] + language_str + line[-2:]
 
@@ -140,8 +140,8 @@ export_dict = {}
 
 
 def get_file_quotation(file_path):
-    symbol_1 = "\""
-    symbol_2 = "\'"
+    symbol_1 = '"'
+    symbol_2 = "'"
     symbol_3 = "`"
     """
     获取文件中的引号文本
@@ -159,7 +159,9 @@ def get_file_quotation(file_path):
                     Log.INFO("\t{}".format(split_text))
                     if not export_dict.get(split_text):
                         export_dict[split_text] = []
-                    export_dict[split_text].append("{}|{}|{}|{}".format(file_path, line_number, i, symbol))
+                    export_dict[split_text].append(
+                        "{}|{}|{}|{}".format(file_path, line_number, i, symbol)
+                    )
 
     with open(file_path, encoding="utf8") as f:
         line_number = 1
@@ -168,13 +170,13 @@ def get_file_quotation(file_path):
                 method(symbol_1)
             if symbol_2 in line:
                 method(symbol_2)
-            # if symbol_3 in line:
-            #     method(symbol_3)
+            if symbol_3 in line:
+                method(symbol_3)
             line_number = line_number + 1
 
 
 def write2excel(excel_name, sheet_name):
-    workbook: openpyxl.workbook.Workbook = openpyxl.load_workbook(excel_name)
+    workbook: openpyxl.Workbook = openpyxl.load_workbook(excel_name)
     worksheet = workbook.create_sheet(sheet_name)
     row = 1
     for i in export_dict.keys():
@@ -193,7 +195,7 @@ def read_excel(excel_name, sheet_name):
     num_column = 2
 
     file_change_dict = {}
-    workbook: openpyxl.workbook.Workbook = openpyxl.load_workbook(excel_name)
+    workbook: openpyxl.Workbook = openpyxl.load_workbook(excel_name)
     worksheet = workbook[sheet_name]
     for i in worksheet.iter_rows():
         for k in range(1, i[num_column].value + 1):
@@ -201,7 +203,9 @@ def read_excel(excel_name, sheet_name):
             file_name: str = value.split("|")[0]
             if not file_change_dict.get(file_name):
                 file_change_dict[file_name] = []
-            file_change_dict[file_name].append("{}|{}".format(value, i[translate_column].value))
+            file_change_dict[file_name].append(
+                "{}|{}".format(value, i[translate_column].value)
+            )
     return file_change_dict
 
 
@@ -218,7 +222,7 @@ def write_translate_file(file_change_dict: dict):
                         start = line.index(str_arr[int(index)])
                         end = start + len(str_arr[int(index)])
                         line = line[:start] + value + line[end:]
-                    except:
+                    except BaseException:
                         print("a")
                 lines = lines + line
                 count_num = count_num + 1
@@ -252,11 +256,18 @@ if __name__ == "__main__":
             for root, dirs, files in os.walk(r"D:\LOVietnamese\config\packet\表格导出"):
                 for file in files:
                     # 提供文件名，目录忽略
-                    if file.endswith("xlsx") and (not (file in ["D-掉落表.xlsx"])) and (
-                            not (root.split("\\")[-1] in ["测试表"])):
+                    if (
+                        file.endswith("xlsx")
+                        and (file not in ["D-掉落表.xlsx"])
+                        and (root.split("\\")[-1] not in ["测试表"])
+                    ):
                         file_path = os.path.join(root, file)
-                        progress_pool.apply_async(series_connection, args=(file_path,), callback=over_call,
-                                                  error_callback=error_call)
+                        progress_pool.apply_async(
+                            series_connection,
+                            args=(file_path,),
+                            callback=over_call,
+                            error_callback=error_call,
+                        )
 
             progress_pool.close()
             progress_pool.join()
@@ -275,3 +286,4 @@ if __name__ == "__main__":
         elif param == "-revertExtractChinese":
             d = read_excel(r"chinese.xlsx", "chinese")
             write_translate_file(d)
+

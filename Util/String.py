@@ -7,7 +7,7 @@ def extract_chinese(text: str) -> list:
     :param text:
     :return:
     """
-    pattern = re.compile(r'[\u4e00-\u9fff]+')
+    pattern = re.compile(r"[\u4e00-\u9fff]+")
     chinese_chars = re.findall(pattern, text)
     return chinese_chars
 
@@ -22,7 +22,7 @@ def str2unicode(text: str, encode="unicode_escape") -> bytes:
     return text.encode(encode)
 
 
-def unicode2str(b:bytes, encode="unicode_escape") -> str:
+def unicode2str(b: bytes, encode="unicode_escape") -> str:
     """
     unicode转回去
     :param b:
@@ -30,3 +30,13 @@ def unicode2str(b:bytes, encode="unicode_escape") -> str:
     :return:
     """
     return b.decode(encode)
+
+
+def remove_space(str) -> str:
+    """
+    去除空格
+    :param str:
+    :return:
+    """
+    return "".join(str.split())
+
