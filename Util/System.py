@@ -4,7 +4,13 @@ import psutil
 import os
 
 
-def kill_proc_tree(proc_id: int, sig=signal.SIGTERM, include_parent=True, timeout=None, on_terminate=None):
+def kill_proc_tree(
+    proc_id: int,
+    sig=signal.SIGTERM,
+    include_parent=True,
+    timeout=None,
+    on_terminate=None,
+):
     """
     杀死进程及其子进程
     :param proc_id:
@@ -24,9 +30,17 @@ def kill_proc_tree(proc_id: int, sig=signal.SIGTERM, include_parent=True, timeou
             p.send_signal(sig)
         except psutil.NoSuchProcess:
             pass
-    gone, alive = psutil.wait_procs(children, timeout=timeout,
-                                    callback=on_terminate)
+    gone, alive = psutil.wait_procs(children, timeout=timeout, callback=on_terminate)
     return gone, alive
+
+
+def open(path):
+    """
+    打开路径
+    :param path:
+    """
+    if os.path.exists(path=path):
+        os.startfile(path)
 
 
 def set_env(key: str, value: str):
@@ -39,7 +53,7 @@ def set_env(key: str, value: str):
     os.environ[key] = value
 
 
-def get_env(key: str) -> str:
+def get_env(key: str) -> str | None:
     """
     获取环境变量
     :param key:
