@@ -24,7 +24,7 @@ def str2unicode(text: str, encode="unicode_escape") -> bytes:
 
 def unicode2str(b: bytes, encode="unicode_escape") -> str:
     """
-    unicode转回去
+    unicode反转
     :param b:
     :param encode:
     :return:
@@ -39,4 +39,3 @@ def remove_space(str) -> str:
     :return:
     """
     return "".join(str.split())
-
