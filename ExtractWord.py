@@ -53,7 +53,7 @@ class MainQWidget(QMainWindow):
 
         self.put_xlsx_path = ""
         self.put_path = ""
-        self.include_last = [".java"]
+        self.include_last = [".h", ".m"]
 
         self.__sheet_name = "word"
         self.__out_path = "Extract.xlsx"
