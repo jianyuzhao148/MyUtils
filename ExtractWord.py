@@ -1,5 +1,9 @@
 import json
+import os
+import re
+import sys
 
+import openpyxl
 import requests
 from PyQt5.QtWidgets import (
     QApplication,
@@ -14,11 +18,6 @@ from PyQt5.QtWidgets import (
     QGroupBox,
     QMainWindow,
 )
-
-import os
-import sys
-import openpyxl
-import re
 
 
 def extract_chinese(text: str) -> list:
