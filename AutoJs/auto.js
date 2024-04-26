@@ -17,6 +17,8 @@ sleep(time)
 
 main()
 
+console.log(shell("logcat"))
+
 function main(){
     device.wakeUpIfNeeded()
     app.launch(packname);
@@ -24,7 +26,7 @@ function main(){
     click(text,0)
     sleep(6000)
     click(width/2,height*0.6)
-    sleep(10000)
+    sleep(15000)
     cut_screen(save_path)
     kill_app(packname)
 
@@ -32,12 +34,14 @@ function main(){
     let flag = false;
     for(let i in list){
         if(list[i].includes(text2)){
-            flag == true;
+            flag = true;
             break;
         }
     }
     send_mail(flag?text2:text3);
+    sleep(1000)
     home()
+    sleep(1000)
     lockScreen()
 }
 
@@ -48,9 +52,9 @@ function send_mail(text) {
         text: text,
         // attachment:save_path //无法添加附件
     });
-    sleep(1000)
+    sleep(3000)
     click(width*0.15,height*0.7)
-    sleep(2000)
+    sleep(5000)
     click(width*0.9,height*0.1)
 }
 

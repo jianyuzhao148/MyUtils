@@ -1,3 +1,6 @@
+import json
+
+import requests
 from PyQt5.QtWidgets import (
     QApplication,
     QLabel,
@@ -52,8 +55,9 @@ class MainQWidget(QMainWindow):
         super().__init__(parent)
 
         self.put_xlsx_path = ""
+        self.put_translate_xlsx_path = ""
         self.put_path = ""
-        self.include_last = [".h", ".m"]
+        self.include_last = [".m",".mm"]
 
         self.__sheet_name = "word"
         self.__out_path = "Extract.xlsx"
@@ -63,16 +67,20 @@ class MainQWidget(QMainWindow):
         group_box = QGroupBox("文字提取", self)
         self.write_layout = QHBoxLayout()
         self.read_layout = QHBoxLayout()
+        self.translate_layout = QHBoxLayout()
         self.progress_layout = QHBoxLayout()
         group_box.setLayout(self.root_box)
         self.root_box.addLayout(self.read_layout)
         self.root_box.addLayout(self.write_layout)
+        self.root_box.addLayout(self.translate_layout)
         self.root_box.addLayout(self.progress_layout)
 
         self.label_write = QLabel()
         self.label_write.setText("写入文字:")
         self.label_read = QLabel()
         self.label_read.setText("提取文字:")
+        self.label_translate = QLabel()
+        self.label_translate.setText("AI  翻译:")
         self.qlineEdit_selectfile = QLineEdit("Excel路径")
         self.qlineEdit_selectfile.setReadOnly(True)
         self.qpush_selectfile = QPushButton("选择Excel")
@@ -91,6 +99,15 @@ class MainQWidget(QMainWindow):
         self.read_layout.addWidget(self.qpush_selectfolder)
         self.read_layout.addWidget(self.read_btn)
 
+        self.translate_selectfile = QLineEdit("Excel路径")
+        self.translate_selectfile.setReadOnly(True)
+        self.qpush_translate_selectfile = QPushButton("选择Excel")
+        self.translate_btn = QPushButton("开始翻译")
+        self.translate_layout.addWidget(self.label_translate)
+        self.translate_layout.addWidget(self.translate_selectfile)
+        self.translate_layout.addWidget(self.qpush_translate_selectfile)
+        self.translate_layout.addWidget(self.translate_btn)
+
         self.label_load = QLabel()
         self.label_load.setText("进度:")
         self.progress = QProgressBar()
@@ -98,11 +115,29 @@ class MainQWidget(QMainWindow):
         self.progress_layout.addWidget(self.progress)
 
         self.qpush_selectfile.clicked.connect(self.select_file)
+        self.qpush_translate_selectfile.clicked.connect(self.select_translate_file)
         self.qpush_selectfolder.clicked.connect(self.select_folder)
         self.read_btn.clicked.connect(self.extract)
         self.write_btn.clicked.connect(self.write)
+        self.translate_btn.clicked.connect(self.translate)
 
         self.setCentralWidget(group_box)
+
+    def translate(self):
+        self.progress.setValue(0)
+        if not os.path.exists(self.put_translate_xlsx_path):
+            QMessageBox.warning(
+                self,
+                "警告",
+                "无效路径",
+                QMessageBox.Yes,
+            )
+            return
+        # 读取需要翻译的字段
+        excel_content = read_excel_col(self.put_translate_xlsx_path, self.__sheet_name, 2)
+        translate_list = kimi_ask(excel_content)
+        self.progress.setMaximum(len(translate_list))
+        write_word_col(self.put_translate_xlsx_path, self.__sheet_name, translate_list,lambda i: self.progress.setValue(i+1))
 
     def select_file(self):
         self.put_xlsx_path, _ = QFileDialog.getOpenFileName(
@@ -113,11 +148,21 @@ class MainQWidget(QMainWindow):
         )
         self.qlineEdit_selectfile.setText(self.put_xlsx_path)
 
+    def select_translate_file(self):
+        self.put_translate_xlsx_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "getOpenFileName",
+            "./",
+            "Excel(*.xlsx);;",
+        )
+        self.translate_selectfile.setText(self.put_translate_xlsx_path)
+
     def select_folder(self):
         self.put_path = QFileDialog.getExistingDirectory(self, "Select Directory", "./")
         self.qlineEdit_selectfolder.setText(self.put_path)
 
     def extract(self):
+        self.progress.setValue(0)
         if not os.path.exists(self.put_path):
             QMessageBox.warning(
                 self,
@@ -150,6 +195,7 @@ class MainQWidget(QMainWindow):
             os.startfile("Extract.xlsx")
 
     def write(self):
+        self.progress.setValue(0)
         if not os.path.exists(self.put_xlsx_path):
             QMessageBox.warning(
                 self,
@@ -294,11 +340,73 @@ def read_excel(excel_name, sheet_name) -> dict:
     return dict_file
 
 
+def read_excel_col(excel_name, sheet_name, cole_num) -> list:
+    workbook: openpyxl.Workbook = openpyxl.load_workbook(excel_name)
+    worksheet = workbook[sheet_name]
+    list = []
+    temp = 0
+    for i in worksheet.iter_cols():
+        if temp == cole_num:
+            for j in i:
+                list.append(j.value)
+        temp = temp + 1
+    return list
+
+
+def kimi_ask(word_list) -> list:
+    translate_word = ask("把'{}'翻译为越南文，结果中每个元素用|分割以字符串回复".format(word_list))
+    translate_list = translate_word.split("|")
+    return translate_list
+
+
+def write_word_col(excel_name, sheet_name, word_list,call_back):
+    workbook: openpyxl.Workbook = openpyxl.load_workbook(excel_name)
+    worksheet = workbook[sheet_name]
+    for i in range(0, len(word_list)):
+        worksheet.cell(i+1, 4).value = word_list[i]
+        call_back(i)
+    workbook.save(excel_name)
+
+
+# Config
+domain: str = "http://192.168.31.130:8000"
+token: str = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ1c2VyLWNlbnRlciIsImV4cCI6MTcyMTgwMTEwMywiaWF0IjoxNzE0MDI1MTAzLCJqdGkiOiJjb2t2NTNyNWNmdWozZ2IwcW05MCIsInR5cCI6InJlZnJlc2giLCJzdWIiOiJjb2t2NTNyNWNmdWozZ2IwcW03ZyIsInNwYWNlX2lkIjoiY29rdjUzcjVjZnVqM2diMHFtNmciLCJhYnN0cmFjdF91c2VyX2lkIjoiY29rdjUzcjVjZnVqM2diMHFtNjAifQ.pHlkfJ_a792c7S2dBJOqJeFiDQ2RqGxZUyrEz-XfwHsYF3fV2YSoKzWo65AZdXPHJLaYEaKQVGp0tF8WyHtqjA"
+
+
+# 提问
+def ask(message, use_search: bool = True) -> str:
+    url = "{}/v1/chat/completions".format(domain)
+    json_data = json.dumps({
+        "model": "kimi",
+        "messages": [
+            {
+                "role": "user",
+                "content": message
+            }
+        ],
+        "use_search": use_search,
+        "stream": False
+    })
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {}".format(token)
+    }
+    try:
+        response = requests.request("POST", url, headers=headers, data=json_data)
+        msg = response.content.decode()
+        content = json.loads(msg)["choices"][0]["message"]["content"]
+        return content
+    except Exception:
+        print("ERROR:" + msg)
+    return None
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     dlg = MainQWidget()
     dlg.show()
     sys.exit(app.exec_())
+
     #     # 单文件提取
     #     with open(param, encoding="utf8") as f:
     #         print(read_word(file_path=param))

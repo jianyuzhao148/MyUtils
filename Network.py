@@ -2,6 +2,8 @@ from scapy.all import *
 from scapy.layers.inet import traceroute
 from scapy.layers.l2 import ARP, Ether, arping
 
+from PIL import Image
+
 from multiprocessing.dummy import Pool as ThreadPool
 
 
