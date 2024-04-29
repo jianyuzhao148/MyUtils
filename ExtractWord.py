@@ -5,19 +5,9 @@ import sys
 
 import openpyxl
 import requests
-from PyQt5.QtWidgets import (
-    QApplication,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QFileDialog,
-    QMessageBox,
-    QProgressBar,
-    QHBoxLayout,
-    QVBoxLayout,
-    QGroupBox,
-    QMainWindow,
-)
+from PyQt5.QtWidgets import (QApplication, QFileDialog, QGroupBox, QHBoxLayout,
+                             QLabel, QLineEdit, QMainWindow, QMessageBox,
+                             QProgressBar, QPushButton, QVBoxLayout)
 
 
 def extract_chinese(text: str) -> list:
@@ -56,7 +46,7 @@ class MainQWidget(QMainWindow):
         self.put_xlsx_path = ""
         self.put_translate_xlsx_path = ""
         self.put_path = ""
-        self.include_last = [".m",".mm"]
+        self.include_last = [".m", ".mm"]
 
         self.__sheet_name = "word"
         self.__out_path = "Extract.xlsx"
@@ -133,10 +123,17 @@ class MainQWidget(QMainWindow):
             )
             return
         # 读取需要翻译的字段
-        excel_content = read_excel_col(self.put_translate_xlsx_path, self.__sheet_name, 2)
+        excel_content = read_excel_col(
+            self.put_translate_xlsx_path, self.__sheet_name, 2
+        )
         translate_list = kimi_ask(excel_content)
         self.progress.setMaximum(len(translate_list))
-        write_word_col(self.put_translate_xlsx_path, self.__sheet_name, translate_list,lambda i: self.progress.setValue(i+1))
+        write_word_col(
+            self.put_translate_xlsx_path,
+            self.__sheet_name,
+            translate_list,
+            lambda i: self.progress.setValue(i + 1),
+        )
 
     def select_file(self):
         self.put_xlsx_path, _ = QFileDialog.getOpenFileName(
@@ -341,7 +338,7 @@ def read_excel(excel_name, sheet_name) -> dict:
 
 def read_excel_col(excel_name, sheet_name, cole_num) -> list:
     workbook: openpyxl.Workbook = openpyxl.load_workbook(excel_name)
-    worksheet = workbook[sheet_name]
+    worksheet: openpyxl.Workbook = workbook[sheet_name]
     list = []
     temp = 0
     for i in worksheet.iter_cols():
@@ -353,42 +350,48 @@ def read_excel_col(excel_name, sheet_name, cole_num) -> list:
 
 
 def kimi_ask(word_list) -> list:
-    translate_word = ask("把'{}'翻译为越南文，结果中每个元素用|分割以字符串回复".format(word_list))
+    translate_word = ask(
+        "把'{}'翻译为越南文，结果中每个元素用|分割以字符串回复".format(word_list)
+    )
     translate_list = translate_word.split("|")
     return translate_list
 
 
-def write_word_col(excel_name, sheet_name, word_list,call_back):
+def write_word_col(excel_name, sheet_name, word_list, call_back):
     workbook: openpyxl.Workbook = openpyxl.load_workbook(excel_name)
     worksheet = workbook[sheet_name]
     for i in range(0, len(word_list)):
-        worksheet.cell(i+1, 4).value = word_list[i]
+        worksheet.cell(i + 1, 4).value = word_list[i]
         call_back(i)
     workbook.save(excel_name)
 
 
 # Config
+kimi_start: str = 'pm2 start dist/index.js --name "kimi-free-api"'
 domain: str = "http://192.168.31.130:8000"
-token: str = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ1c2VyLWNlbnRlciIsImV4cCI6MTcyMTgwMTEwMywiaWF0IjoxNzE0MDI1MTAzLCJqdGkiOiJjb2t2NTNyNWNmdWozZ2IwcW05MCIsInR5cCI6InJlZnJlc2giLCJzdWIiOiJjb2t2NTNyNWNmdWozZ2IwcW03ZyIsInNwYWNlX2lkIjoiY29rdjUzcjVjZnVqM2diMHFtNmciLCJhYnN0cmFjdF91c2VyX2lkIjoiY29rdjUzcjVjZnVqM2diMHFtNjAifQ.pHlkfJ_a792c7S2dBJOqJeFiDQ2RqGxZUyrEz-XfwHsYF3fV2YSoKzWo65AZdXPHJLaYEaKQVGp0tF8WyHtqjA"
+token: str = (
+    "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ1c2VyLWNlbnRlciIsImV4cCI6MTcyMTgwMTEwMywiaWF0IjoxNzE0MDI1MTAzLCJqdGkiOiJjb2t2NTNyNWNmdWozZ2IwcW05MCIsInR5cCI6InJlZnJlc2giLCJzdWIiOiJjb2t2NTNyNWNmdWozZ2IwcW03ZyIsInNwYWNlX2lkIjoiY29rdjUzcjVjZnVqM2diMHFtNmciLCJhYnN0cmFjdF91c2VyX2lkIjoiY29rdjUzcjVjZnVqM2diMHFtNjAifQ.pHlkfJ_a792c7S2dBJOqJeFiDQ2RqGxZUyrEz-XfwHsYF3fV2YSoKzWo65AZdXPHJLaYEaKQVGp0tF8WyHtqjA"
+)
+
+
+def start_kimi_server():
+    os.system(kimi_start)
 
 
 # 提问
 def ask(message, use_search: bool = True) -> str:
     url = "{}/v1/chat/completions".format(domain)
-    json_data = json.dumps({
-        "model": "kimi",
-        "messages": [
-            {
-                "role": "user",
-                "content": message
-            }
-        ],
-        "use_search": use_search,
-        "stream": False
-    })
+    json_data = json.dumps(
+        {
+            "model": "kimi",
+            "messages": [{"role": "user", "content": message}],
+            "use_search": use_search,
+            "stream": False,
+        }
+    )
     headers = {
         "Content-Type": "application/json",
-        "Authorization": "Bearer {}".format(token)
+        "Authorization": "Bearer {}".format(token),
     }
     try:
         response = requests.request("POST", url, headers=headers, data=json_data)
@@ -397,7 +400,7 @@ def ask(message, use_search: bool = True) -> str:
         return content
     except Exception:
         print("ERROR:" + msg)
-    return None
+    return ""
 
 
 if __name__ == "__main__":
