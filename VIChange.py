@@ -1,11 +1,10 @@
 import os
+import re
 import sys
-
-import openpyxl
-import langid
 from multiprocessing import Pool
 
-import re
+import langid
+import openpyxl
 
 
 class String:
@@ -19,7 +18,7 @@ class String:
         :param text:
         :return:
         """
-        pattern = re.compile(r'[\u4e00-\u9fff]+')
+        pattern = re.compile(r"[\u4e00-\u9fff]+")
         chinese_chars = re.findall(pattern, text)
         return chinese_chars
 
@@ -58,7 +57,7 @@ def over_call(p):
 
 
 def error_call(error):
-    print(f'进程:' + str(os.getpid()) + 'Error:', error, flush=True)
+    print(f"进程:" + str(os.getpid()) + "Error:", error, flush=True)
 
 
 def write_sheet(excel_name, sheet_table: dict):
@@ -101,14 +100,14 @@ def restore_unicode(file_name):
         if "b'\"" in line:
             try:
                 idx = line.index("b'\"")
-                byte_str = line[idx + 2:-3]
-                temp = eval("u" + "\'" + byte_str + "\'")
+                byte_str = line[idx + 2 : -3]
+                temp = eval("u" + "'" + byte_str + "'")
                 try:
-                    if "\'" in temp:
+                    if "'" in temp:
                         language_str = eval("u" + temp)
-                        language_str = "\"" + language_str + "\""
+                        language_str = '"' + language_str + '"'
                     else:
-                        language_str = eval("u" + "\'" + temp + "\'")
+                        language_str = eval("u" + "'" + temp + "'")
                 except:
                     language_str = eval("u" + temp)
                 Log.INFO("\t\t{}=>{}".format(byte_str, language_str))
@@ -117,9 +116,9 @@ def restore_unicode(file_name):
                 Log.ERROR(line)
         if "b'{" in line:
             idx = line.index("b'{")
-            byte_str = line[idx + 1:-2]
+            byte_str = line[idx + 1 : -2]
             language_str = eval("u" + byte_str)
-            language_str = eval("u" + "\'" + language_str + "\'")
+            language_str = eval("u" + "'" + language_str + "'")
             Log.INFO("\t\t{}=>{}".format(byte_str, language_str))
             line = line[:idx] + language_str + line[-2:]
 
@@ -140,8 +139,8 @@ export_dict = {}
 
 
 def get_file_quotation(file_path):
-    symbol_1 = "\""
-    symbol_2 = "\'"
+    symbol_1 = '"'
+    symbol_2 = "'"
     symbol_3 = "`"
     """
     获取文件中的引号文本
@@ -158,7 +157,9 @@ def get_file_quotation(file_path):
                 Log.INFO("\t{}".format(split_text))
                 if not export_dict.get(split_text):
                     export_dict[split_text] = []
-                export_dict[split_text].append("{}@{}@{}@{}".format(file_path, line_number, i, symbol))
+                export_dict[split_text].append(
+                    "{}@{}@{}@{}".format(file_path, line_number, i, symbol)
+                )
 
     with open(file_path, encoding="utf8") as f:
         line_number = 1
@@ -203,7 +204,9 @@ def read_excel(excel_name, sheet_name):
             file_name: str = value.split("@")[0]
             if not file_change_dict.get(file_name):
                 file_change_dict[file_name] = []
-            file_change_dict[file_name].append("{}@{}".format(value, i[translate_column].value))
+            file_change_dict[file_name].append(
+                "{}@{}".format(value, i[translate_column].value)
+            )
     return file_change_dict
 
 
@@ -254,11 +257,18 @@ if __name__ == "__main__":
             for root, dirs, files in os.walk("表格导出"):
                 for file in files:
                     # 提供文件名，目录忽略
-                    if file.endswith("xlsx") and (not (file in ["D-掉落表.xlsx"])) and (
-                            not (root.split("\\")[-1] in ["测试表"])):
+                    if (
+                        file.endswith("xlsx")
+                        and (not (file in ["D-掉落表.xlsx"]))
+                        and (not (root.split("\\")[-1] in ["测试表"]))
+                    ):
                         file_path = os.path.join(root, file)
-                        progress_pool.apply_async(series_connection, args=(file_path,), callback=over_call,
-                                                  error_callback=error_call)
+                        progress_pool.apply_async(
+                            series_connection,
+                            args=(file_path,),
+                            callback=over_call,
+                            error_callback=error_call,
+                        )
 
             progress_pool.close()
             progress_pool.join()

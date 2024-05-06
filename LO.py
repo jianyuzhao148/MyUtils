@@ -1,30 +1,163 @@
 import os
+import re
 import sys
+from multiprocessing import Pool
 
-from PyQt5.QtCore import QStringListModel
-from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QComboBox,
-                             QCompleter, QFileDialog, QGroupBox, QHBoxLayout,
-                             QLabel, QLineEdit, QListView, QMainWindow,
-                             QMessageBox, QProgressBar, QPushButton,
-                             QVBoxLayout)
+import langid
+import openpyxl
+from PyQt5.QtCore import QStringListModel, Qt
+from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCompleter,
+                             QGroupBox, QHBoxLayout, QLabel, QLineEdit,
+                             QListView, QMainWindow, QMessageBox, QProgressBar,
+                             QPushButton, QVBoxLayout)
 
 include_file_path = r"D:\LOVietnamese\config\packet\表格导出"
 include_file_last = ".xlsx"
+revert_path = r"D:\LOVietnamese\config\packet\client\data"
+
+
+class String:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def extract_chinese(text: str) -> list:
+        """
+        获取字符串中中文
+        :param text:
+        :return:
+        """
+        pattern = re.compile(r"[\u4e00-\u9fff]+")
+        chinese_chars = re.findall(pattern, text)
+        return chinese_chars
+
+    @staticmethod
+    def str2unicode(text: str, encode="unicode_escape") -> str:
+        return text.encode(encode)
+        # return temp.replace(r"\\", r"##")
+
+    @staticmethod
+    def unicode2str(b: bytes, encode="unicode_escape") -> str:
+        return b.decode(encode)
+
+
+def get_all_sheet(excel_name):
+    sheet_table: dict = {}
+    workbook: openpyxl.Workbook = openpyxl.load_workbook(excel_name)
+    for sheet in workbook:
+        sheet_table[sheet.title] = {}
+        for i in sheet.iter_rows():
+            for j in i:
+                if type(j.value) == str and langid.classify(j.value)[0] == "vi":
+                    sheet_table[sheet.title][j.coordinate] = String.str2unicode(j.value)
+    workbook.close()
+    return sheet_table
+
+
+def series_connection(file_path):
+    sheet_table = get_all_sheet(file_path)
+    write_sheet(file_path, sheet_table)
+
+
+def write_sheet(excel_name, sheet_table: dict):
+    number = 0
+    workbook: openpyxl.Workbook = openpyxl.load_workbook(excel_name)
+    for sheet_name in sheet_table.keys():
+        sheet = workbook[sheet_name]
+        local_table = sheet_table[sheet_name]
+        for local in local_table.keys():
+            sheet[local] = str(local_table[local])
+            number = number + 1
+    if number > 0:
+        workbook.save(excel_name)
+    workbook.close()
 
 
 class MainQWidget(QMainWindow):
 
+    def __restore_unicode(self, file_name):
+        file_content = ""
+        f = open(file_name, encoding="utf8")
+        line = f.readline()
+        while line:
+            if "b'\"" in line:
+                try:
+                    idx = line.index("b'\"")
+                    byte_str = line[idx + 2: -3]
+                    temp = eval("u" + "'" + byte_str + "'")
+                    try:
+                        if "'" in temp:
+                            language_str = eval("u" + temp)
+                            language_str = '"' + language_str + '"'
+                        else:
+                            language_str = eval("u" + "'" + temp + "'")
+                    except:
+                        language_str = eval("u" + temp)
+                    line = line[:idx] + language_str + line[-2:]
+                except:
+                    pass
+            if "b'{" in line:
+                idx = line.index("b'{")
+                byte_str = line[idx + 1: -2]
+                language_str = eval("u" + byte_str)
+                language_str = eval("u" + "'" + language_str + "'")
+                line = line[:idx] + language_str + line[-2:]
+
+            file_content = file_content + line
+            line = f.readline()
+        f.close()
+
+        with open(file_name, "w", encoding="utf-8") as f:
+            f.write(file_content)
+
+    def __complet_call(self, _):
+        self.file_len = self.file_len - 1
+        self.progress.setValue(1)
+
+    def __transform_vi2unicode(self, file_list):
+        self.file_len = len(file_list)
+        self.progress.setMaximum(self.file_len)
+        progress_pool = Pool()
+        for file in file_list:
+            progress_pool.apply_async(
+                series_connection,
+                args=(file,),
+                callback=self.__complet_call,
+                error_callback=None,
+            )
+        progress_pool.close()
+        progress_pool.join()
+
     def __transform(self):
-        if len(self.file_list) == 0:
+        select_list = self.listview.selectedIndexes()
+        if len(select_list) == 0:
+            QMessageBox.warning(
+                self,
+                "警告",
+                "未选择任何文件",
+                QMessageBox.Yes,
+            )
             return
-        for i in self.listview.selectedIndexes():
-            print(i.data())
+        select_file_str = ""
+        file_list = []
+        for i in select_list:
+            select_file_str = select_file_str + "\n" + i.data()
+            file_list.append(include_file_path + os.sep + i.data())
+
+        reply = QMessageBox.information(
+            self,
+            "Tips",
+            "请核对选中文件：" + select_file_str,
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        if reply == QMessageBox.Yes:
+            self.__transform_vi2unicode(file_list)
 
     def __translate_all(self):
-        if len(self.file_list) == 0:
-            return
-        for i in self.listview.selectedIndexes():
-            print(i.data())
+        file_list = []
+        for i in self.file_list:
+            file_list.append(include_file_path + os.sep + i)
+        self.__transform_vi2unicode(file_list)
 
     def __check_excel(self):
         all_items = os.listdir(include_file_path)
@@ -39,128 +172,88 @@ class MainQWidget(QMainWindow):
             )
         ]
 
+    def __revert_unicode(self):
+        for root, _, files in os.walk(revert_path):
+            for file in files:
+                if file.endswith("config") or file.endswith("confg"):
+                    self.__restore_unicode(os.path.join(root, file))
+
+    def __start_outsheet(self):
+        os.system(include_file_path + os.sep + "导表管理器.exe")
+
+    def search_lineEdit_finished(self):
+        print("失去焦点")
+
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self.put_xlsx_path = ""
-        self.put_translate_xlsx_path = ""
-        self.put_path = ""
-        self.include_last = [".m", ".mm"]
         self.file_list = []
-
+        self.file_len = 0
         self.__check_excel()
 
-        # ----------------------------UI----------------------------
         self.setWindowTitle("文本转换工具")
+        self.setFixedSize(600, 500)
+
         group_box = QGroupBox("文本转换", self)
-        self.parent_layout = QHBoxLayout()
+
+        self.parent_layout = QVBoxLayout()
         group_box.setLayout(self.parent_layout)
 
-        self.search_layout = QHBoxLayout()
-        self.search_label = QLabel()
-        self.search_label.setText("搜索:")
-        self.search_completer = QCompleter(self.file_list)
-        self.search_lineEdit = QLineEdit()
-        self.search_lineEdit.setCompleter(self.search_completer)
-        self.search_layout.addWidget(self.search_label)
-        self.search_layout.addWidget(self.search_lineEdit)
         self.select_layout = QVBoxLayout()
+
+        # self.search_layout = QHBoxLayout()
+        # self.search_label = QLabel("搜索:")
+        # self.search_completer = QCompleter(self.file_list)
+        # self.search_completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        # self.search_lineEdit = QLineEdit()
+        # self.search_lineEdit.editingFinished.connect(self.search_lineEdit_finished)
+        # self.search_lineEdit.setCompleter(self.search_completer)
+        # self.search_layout.addWidget(self.search_label)
+        # self.search_layout.addWidget(self.search_lineEdit)
+        # self.select_layout.addLayout(self.search_layout)
+
         self.listview = QListView()
         self.string_list = QStringListModel()
         self.string_list.setStringList(self.file_list)
         self.listview.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.listview.setModel(self.string_list)
-        self.select_layout.addLayout(self.search_layout)
         self.select_layout.addWidget(self.listview)
 
         self.opation_layout = QVBoxLayout()
-        self.opation_button = QPushButton("开始转换")
-        self.opation_all_button = QPushButton("全部转换")
-        self.opation_layout.addWidget(self.opation_button)
-        self.opation_layout.addWidget(self.opation_all_button)
-        self.opation_button.clicked.connect(self.__transform)
-        self.opation_all_button.clicked.connect(self.__translate_all)
+
+        self.progress_layout = QHBoxLayout()
+        self.progress_label = QLabel("进度:")
+        self.progress = QProgressBar()
+        self.progress_layout.addWidget(self.progress_label)
+        self.progress_layout.addWidget(self.progress)
+        self.opation_layout.addLayout(self.progress_layout)
+
+        self.transform_layout = QHBoxLayout()
+        self.transform_label = QLabel("越文转Unicode:")
+        self.transform_button = QPushButton("开始转换")
+        self.transform_all_button = QPushButton("全部转换")
+        self.transform_button.clicked.connect(self.__transform)
+        self.transform_all_button.clicked.connect(self.__translate_all)
+        self.transform_layout.addWidget(self.transform_label)
+        self.transform_layout.addWidget(self.transform_button)
+        self.transform_layout.addWidget(self.transform_all_button)
+        self.opation_layout.addLayout(self.transform_layout)
+
+        self.outsheet_layout = QHBoxLayout()
+        self.outsheet_button = QPushButton("启动导表工具")
+        self.outsheet_button.clicked.connect(self.__start_outsheet)
+        self.outsheet_layout.addWidget(self.outsheet_button)
+        self.opation_layout.addLayout(self.outsheet_layout)
+
+        self.revert_layout = QHBoxLayout()
+        self.revert_button = QPushButton("Unicode恢复")
+        self.revert_button.clicked.connect(self.__revert_unicode)
+        self.revert_layout.addWidget(self.revert_button)
+        self.opation_layout.addLayout(self.revert_layout)
 
         self.parent_layout.addLayout(self.select_layout)
         self.parent_layout.addLayout(self.opation_layout)
 
-        # TODO:选择后给出提示
-        # self.listview.selectedIndexes()
-
-        # self.read_layout = QHBoxLayout()
-        # self.translate_layout = QHBoxLayout()
-        # self.progress_layout = QHBoxLayout()
-        # self.root_box.addLayout(self.read_layout)
-        # self.root_box.addLayout(self.write_layout)
-        # self.root_box.addLayout(self.translate_layout)
-        # self.root_box.addLayout(self.progress_layout)
-        # self.root_box.addLayout(self.select_layout)
-        #
-        # self.label_write = QLabel()
-        # self.label_write.setText("写入文字:")
-        # self.label_read = QLabel()
-        # self.label_read.setText("提取文字:")
-        # self.label_translate = QLabel()
-        # self.label_translate.setText("AI  翻译:")
-        # self.qlineEdit_selectfile = QLineEdit("Excel路径")
-        # self.qlineEdit_selectfile.setReadOnly(True)
-        # self.qpush_selectfile = QPushButton("选择Excel")
-        #
-        # self.write_layout.addWidget(self.label_write)
-        # self.write_layout.addWidget(self.qlineEdit_selectfile)
-        # self.write_layout.addWidget(self.qpush_selectfile)
-        # self.write_btn = QPushButton("开始写入")
-        # self.write_layout.addWidget(self.write_btn)
-        # self.qlineEdit_selectfolder = QLineEdit("目录路径")
-        # self.qlineEdit_selectfolder.setReadOnly(True)
-        # self.qpush_selectfolder = QPushButton("选择目录")
-        # self.read_btn = QPushButton("开始提取")
-        # self.read_layout.addWidget(self.label_read)
-        # self.read_layout.addWidget(self.qlineEdit_selectfolder)
-        # self.read_layout.addWidget(self.qpush_selectfolder)
-        # self.read_layout.addWidget(self.read_btn)
-        #
-        # self.translate_selectfile = QLineEdit("Excel路径")
-        # self.translate_selectfile.setReadOnly(True)
-        # self.qpush_translate_selectfile = QPushButton("选择Excel")
-        # self.translate_btn = QPushButton("开始翻译")
-        # self.translate_layout.addWidget(self.label_translate)
-        # self.translate_layout.addWidget(self.translate_selectfile)
-        # self.translate_layout.addWidget(self.qpush_translate_selectfile)
-        # self.translate_layout.addWidget(self.translate_btn)
-        #
-        # self.label_load = QLabel()
-        # self.label_load.setText("进度:")
-        # self.progress = QProgressBar()
-        # self.progress_layout.addWidget(self.label_load)
-        # self.progress_layout.addWidget(self.progress)
-        #
-        # self.qpush_selectfile.clicked.connect(self.select_file)
-        # self.qpush_translate_selectfile.clicked.connect(self.select_translate_file)
-        # self.qpush_selectfolder.clicked.connect(self.select_folder)
-        # self.read_btn.clicked.connect(self.extract)
-        # self.write_btn.clicked.connect(self.write)
-        # self.translate_btn.clicked.connect(self.translate)
         self.setCentralWidget(group_box)
-        # ----------------------------UI----------------------------
-
-    def translate(self):
-        pass
-
-    def select_file(self):
-        pass
-
-    def select_translate_file(self):
-        pass
-
-    def select_folder(self):
-        pass
-
-    def extract(self):
-        pass
-
-    def write(self):
-        pass
 
 
 if __name__ == "__main__":
