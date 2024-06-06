@@ -5,15 +5,15 @@ from multiprocessing import Pool
 
 import langid
 import openpyxl
-from PyQt5.QtCore import QStringListModel, Qt
+from PyQt5.QtCore import QStringListModel, Qt, QThread
 from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCompleter,
                              QGroupBox, QHBoxLayout, QLabel, QLineEdit,
                              QListView, QMainWindow, QMessageBox, QProgressBar,
                              QPushButton, QVBoxLayout)
 
-include_file_path = r"D:\LOVietnamese\config\packet\表格导出"
+include_file_path = r"D:\LoVN\config\packet\表格导出"
 include_file_last = ".xlsx"
-revert_path = r"D:\LOVietnamese\config\packet\client\data"
+revert_path = r"D:\LoVN\config\packet\client\data"
 
 
 class String:
@@ -32,9 +32,8 @@ class String:
         return chinese_chars
 
     @staticmethod
-    def str2unicode(text: str, encode="unicode_escape") -> str:
+    def str2unicode(text: str, encode="unicode_escape") -> bytes:
         return text.encode(encode)
-        # return temp.replace(r"\\", r"##")
 
     @staticmethod
     def unicode2str(b: bytes, encode="unicode_escape") -> str:
@@ -83,7 +82,7 @@ class MainQWidget(QMainWindow):
             if "b'\"" in line:
                 try:
                     idx = line.index("b'\"")
-                    byte_str = line[idx + 2: -3]
+                    byte_str = line[idx + 2 : -3]
                     temp = eval("u" + "'" + byte_str + "'")
                     try:
                         if "'" in temp:
@@ -98,7 +97,7 @@ class MainQWidget(QMainWindow):
                     pass
             if "b'{" in line:
                 idx = line.index("b'{")
-                byte_str = line[idx + 1: -2]
+                byte_str = line[idx + 1 : -2]
                 language_str = eval("u" + byte_str)
                 language_str = eval("u" + "'" + language_str + "'")
                 line = line[:idx] + language_str + line[-2:]
@@ -152,12 +151,31 @@ class MainQWidget(QMainWindow):
         )
         if reply == QMessageBox.Yes:
             self.__transform_vi2unicode(file_list)
+        QMessageBox.information(
+            self,
+            "提示",
+            "转换完成",
+            QMessageBox.Yes,
+        )
 
     def __translate_all(self):
-        file_list = []
-        for i in self.file_list:
-            file_list.append(include_file_path + os.sep + i)
-        self.__transform_vi2unicode(file_list)
+        result = QMessageBox.warning(
+            self,
+            "警告",
+            "全部转换需要较长时间,是否继续?",
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        if result == QMessageBox.Yes:
+            file_list = []
+            for i in self.file_list:
+                file_list.append(include_file_path + os.sep + i)
+            self.__transform_vi2unicode(file_list)
+            QMessageBox.information(
+                self,
+                "提示",
+                "转换完成",
+                QMessageBox.Yes,
+            )
 
     def __check_excel(self):
         all_items = os.listdir(include_file_path)
@@ -165,10 +183,8 @@ class MainQWidget(QMainWindow):
             f
             for f in all_items
             if (
-                os.path.isfile(
-                    os.path.join(include_file_path, f)
-                    and os.path.splitext(f)[-1] == include_file_last
-                )
+                os.path.isfile(os.path.join(include_file_path, f))
+                and os.path.splitext(f)[-1] == include_file_last
             )
         ]
 
@@ -177,6 +193,12 @@ class MainQWidget(QMainWindow):
             for file in files:
                 if file.endswith("config") or file.endswith("confg"):
                     self.__restore_unicode(os.path.join(root, file))
+        QMessageBox.information(
+            self,
+            "提示",
+            "转换完成",
+            QMessageBox.Yes,
+        )
 
     def __start_outsheet(self):
         os.system(include_file_path + os.sep + "导表管理器.exe")
@@ -189,6 +211,8 @@ class MainQWidget(QMainWindow):
         self.file_list = []
         self.file_len = 0
         self.__check_excel()
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        # self.setWindowFlags(Qt.WindowStaysOnTopHint|Qt.FramelessWindowHint|Qt.Tool);
 
         self.setWindowTitle("文本转换工具")
         self.setFixedSize(600, 500)

@@ -350,8 +350,11 @@ def read_excel_col(excel_name, sheet_name, cole_num) -> list:
 
 
 def kimi_ask(word_list) -> list:
+    temp_str = (word_list[0] if word_list[0] is not None else "None")
+    for i in range(1, len(word_list)):
+        temp_str = temp_str + "|" + (word_list[i] if word_list[i] is not None else "None")
     translate_word = ask(
-        "把'{}'翻译为越南文，结果中每个元素用|分割以字符串回复".format(word_list)
+        "把'{}'翻译为越南文，个别无法翻译的词汇，直接用源文本填充。只要翻译文本，不要多余回复".format(temp_str)
     )
     translate_list = translate_word.split("|")
     return translate_list
@@ -368,7 +371,8 @@ def write_word_col(excel_name, sheet_name, word_list, call_back):
 
 # Config
 kimi_start: str = 'pm2 start dist/index.js --name "kimi-free-api"'
-domain: str = "http://192.168.31.130:8000"
+# domain: str = "http://192.168.31.130:8000"
+domain: str = "http://127.0.0.1:8000"
 token: str = (
     "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ1c2VyLWNlbnRlciIsImV4cCI6MTcyMTgwMTEwMywiaWF0IjoxNzE0MDI1MTAzLCJqdGkiOiJjb2t2NTNyNWNmdWozZ2IwcW05MCIsInR5cCI6InJlZnJlc2giLCJzdWIiOiJjb2t2NTNyNWNmdWozZ2IwcW03ZyIsInNwYWNlX2lkIjoiY29rdjUzcjVjZnVqM2diMHFtNmciLCJhYnN0cmFjdF91c2VyX2lkIjoiY29rdjUzcjVjZnVqM2diMHFtNjAifQ.pHlkfJ_a792c7S2dBJOqJeFiDQ2RqGxZUyrEz-XfwHsYF3fV2YSoKzWo65AZdXPHJLaYEaKQVGp0tF8WyHtqjA"
 )
