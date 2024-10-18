@@ -124,7 +124,7 @@ class MainQWidget(QMainWindow):
             return
         # 读取需要翻译的字段
         excel_content = read_excel_col(
-            self.put_translate_xlsx_path, self.__sheet_name, 2
+            self.put_translate_xlsx_path, self.__sheet_name, 1
         )
         translate_list = kimi_ask(excel_content)
         self.progress.setMaximum(len(translate_list))
@@ -350,13 +350,18 @@ def read_excel_col(excel_name, sheet_name, cole_num) -> list:
 
 
 def kimi_ask(word_list) -> list:
-    temp_str = (word_list[0] if word_list[0] is not None else "None")
-    for i in range(1, len(word_list)):
+    translate_list = word_list
+    temp_str = ""
+    for i in range(0, len(word_list)):
         temp_str = temp_str + "|" + (word_list[i] if word_list[i] is not None else "None")
-    translate_word = ask(
-        "把'{}'翻译为越南文，个别无法翻译的词汇，直接用源文本填充。只要翻译文本，不要多余回复".format(temp_str)
-    )
-    translate_list = translate_word.split("|")
+        if i % 10 == 0:
+            temp_str = temp_str[1:]
+            translate_word = ask_translate(temp_str)
+            sp_list = (translate_word.split("|"))
+            sp_list.reverse()
+            for j in range(0, len(sp_list)):
+                translate_list[i-j] = sp_list[j]
+            temp_str = ""
     return translate_list
 
 
@@ -374,12 +379,21 @@ kimi_start: str = 'pm2 start dist/index.js --name "kimi-free-api"'
 # domain: str = "http://192.168.31.130:8000"
 domain: str = "http://127.0.0.1:8000"
 token: str = (
-    "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ1c2VyLWNlbnRlciIsImV4cCI6MTcyMTgwMTEwMywiaWF0IjoxNzE0MDI1MTAzLCJqdGkiOiJjb2t2NTNyNWNmdWozZ2IwcW05MCIsInR5cCI6InJlZnJlc2giLCJzdWIiOiJjb2t2NTNyNWNmdWozZ2IwcW03ZyIsInNwYWNlX2lkIjoiY29rdjUzcjVjZnVqM2diMHFtNmciLCJhYnN0cmFjdF91c2VyX2lkIjoiY29rdjUzcjVjZnVqM2diMHFtNjAifQ.pHlkfJ_a792c7S2dBJOqJeFiDQ2RqGxZUyrEz-XfwHsYF3fV2YSoKzWo65AZdXPHJLaYEaKQVGp0tF8WyHtqjA"
-)
+    "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ1c2VyLWNlbnRlciIsImV4cCI6MTczNjc2NjA4MSwiaWF0IjoxNzI4OTkwMDgxLCJqdGkiOiJjczc0bjBhbjZ2dWttZ3Uzbjh2MCIsInR5cCI6InJlZnJlc2giLCJhcHBfaWQiOiJraW1pIiwic3ViIjoiY3M3NG4wYW42dnVrbWd1M244dTAiLCJzcGFjZV9pZCI6ImNzNzRuMGFuNnZ1a21ndTNuOHRnIiwiYWJzdHJhY3RfdXNlcl9pZCI6ImNzNzRuMGFuNnZ1a21ndTNuOHQwIiwiZGV2aWNlX2lkIjoiNzM0ODY4ODc5ODY0Mjg5MDc2MSJ9.U4prBShZCQa-iz2XU37j4fKdjnjXzzQAXJwpe1LV-XDUwzVHLj-q_rrHhGsmg9-LnGA70_82LOOg--x_lWnVCg")
 
 
 def start_kimi_server():
     os.system(kimi_start)
+
+
+def ask_translate(text: str) -> str:
+    message = "将中文:'{}'翻译为泰文，无法翻译的请意译，必须只返回翻译文本，不要返回翻译来源,只要翻译的文本！！！".format(
+        text)
+    content = ask(message)
+    # 如果返回的数据长度不对则重新翻译
+    if len(message.split("|")) != len(content.split("|")):
+        return ask_translate(text)
+    return content
 
 
 # 提问

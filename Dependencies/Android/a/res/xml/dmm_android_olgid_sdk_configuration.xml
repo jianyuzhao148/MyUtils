@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<properties>
+    <appId>1</appId>
+    <consumerKey>1</consumerKey>
+    <consumerSecret>1</consumerSecret>
+    <authenticationClientId>1</authenticationClientId>
+    <authenticationClientSecret>1</authenticationClientSecret>
+    <appIdSandbox>35386</appIdSandbox>
+    <consumerKeySandbox>cXe7h0nw9WVPjPRY</consumerKeySandbox>
+    <consumerSecretSandbox>aW4H8KPAP_--@MR]yX@HMl6M?Pogs--s</consumerSecretSandbox>
+    <developmentMode>sandbox</developmentMode>
+    <oauthSignaturePublicKey>1</oauthSignaturePublicKey>
+</properties>

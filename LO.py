@@ -269,7 +269,6 @@ class MainQWidget(QMainWindow):
         self.opation_layout.addLayout(self.outsheet_layout)
 
         self.revert_layout = QHBoxLayout()
-        self.revert_button = QPushButton("Unicode恢复")
         self.revert_button.clicked.connect(self.__revert_unicode)
         self.revert_layout.addWidget(self.revert_button)
         self.opation_layout.addLayout(self.revert_layout)

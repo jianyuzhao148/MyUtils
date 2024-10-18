@@ -1,0 +1,124 @@
+{
+    "fonts":[
+        {
+            "fontID" : 1,
+            "fontName" : "Default Font",
+            "faces" : [
+                {
+                    "fontFile" : "font/daum_regular.ttf",
+                    "faceIdx" : 0,
+                    "size" : 36,
+                    "dpi" : 96,
+                    "bold" : 3,
+                    "outline" : 3,
+                    "blur" : 2
+                }
+            ]
+        },
+        {
+            "fontID" : 2,
+            "fontName" : "Large Font",
+            "faces" : [
+                {
+                    "fontFile" : "font/daum_regular.ttf",
+                    "faceIdx" : 0,
+                    "size" : 36,
+                    "dpi" : 96,
+                    "bold" : 3,
+                    "outline" : 3,
+                    "blur" : 2
+                }
+            ]
+        },
+        {
+            "fontID" : 3,
+            "fontName" : "Burn Font",
+            "faces" : [
+                {
+                    "fontFile" : "font/burn_gothic.ttf",
+                    "faceIdx" : 0,
+                    "size" : 16,
+                    "dpi" : 96,
+                    "bold" : 3,
+                    "outline" : 2,
+                    "blur" : 2
+                }
+            ]
+        },
+        {
+            "fontID" : 4,
+            "fontName" : "Burn Large",
+            "faces" : [
+                {
+                    "fontFile" : "font/burn_gothic.ttf",
+                    "faceIdx" : 0,
+                    "size" : 36,
+                    "dpi" : 96,
+                    "bold" : 3,
+                    "outline" : 2,
+                    "blur" : 2
+                }
+            ]
+        },
+        {
+            "fontID" : 5,
+            "fontName" : "Agency_fb",
+            "faces" : [
+                {
+                    "fontFile" : "font/agency_fb.ttf",
+                    "faceIdx" : 0,
+                    "size" : 36,
+                    "dpi" : 96,
+                    "bold" : 3,
+                    "outline" : 2,
+                    "blur" : 2
+                }
+            ]
+        },
+        {
+            "fontID" : 6,
+            "fontName" : "Agency_large",
+            "faces" : [
+                {
+                    "fontFile" : "font/agency_fb.ttf",
+                    "faceIdx" : 0,
+                    "size" : 52,
+                    "dpi" : 96,
+                    "bold" : 3,
+                    "outline" : 3,
+                    "blur" : 2
+                }
+            ]
+        },
+        {
+            "fontID" : 7,
+            "fontName" : "American_captain",
+            "faces" : [
+                {
+                    "fontFile" : "font/american_captain.ttf",
+                    "faceIdx" : 0,
+                    "size" : 36,
+                    "dpi" : 96,
+                    "bold" : 3,
+                    "outline" : 2,
+                    "blur" : 2
+                }
+            ]
+        },
+        {
+            "fontID" : 8,
+            "fontName" : "American_large",
+            "faces" : [
+                {
+                    "fontFile" : "font/american_captain.ttf",
+                    "faceIdx" : 0,
+                    "size" : 52,
+                    "dpi" : 96,
+                    "bold" : 3,
+                    "outline" : 3,
+                    "blur" : 2
+                }
+            ]
+        }
+    ]
+}

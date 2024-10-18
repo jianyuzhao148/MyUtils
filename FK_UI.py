@@ -75,7 +75,7 @@ class LogcatUI(QWidget):
         self.resize(500, 500)
         self.text: QTextBrowser = QTextBrowser(self)
         self.text.resize(500, 500)
-        self.device_name=""
+        self.device_name = ""
         self.connect()
         self.on_response()
 
@@ -142,7 +142,6 @@ class LogcatUI(QWidget):
         self.sock.connect(("127.0.0.1", 5037))
         # sock.sendall("000Chost:version".encode())
         # sock.sendall("001ACLB7N18822003963:get-state".encode())
-
 
 
 class AndroidUI(QMainWindow):
