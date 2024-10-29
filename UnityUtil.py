@@ -2,9 +2,6 @@ import json
 import os
 
 from openpyxl import Workbook
-import UnityPy
-import yaml
-import openpyxl
 import pandas as pd
 
 sheetList = ["Enemy", "Item", "LevelBuff", "Level", "Hero", "HeroSkill", "LevelUnlock"]

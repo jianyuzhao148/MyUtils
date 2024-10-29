@@ -1,7 +1,9 @@
-# 重设图片尺寸
+"""
+重设图片尺寸
+"""
 import os.path
 
-from Util import Image,String
+from Util import Image
 
 if __name__ == "__main__":
     root_dir = (r"D:\FK_VN2\client\AndroidProject_File\framework\client_core\frameworks\runtime-src\proj.android_en\app\src\dfkvn\res")

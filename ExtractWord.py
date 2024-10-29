@@ -1,3 +1,8 @@
+"""
+究极翻译脚本
+"""
+
+
 import json
 import os
 import re
@@ -33,10 +38,6 @@ def remove_space(str) -> str:
 def ERROR(msg):
     print("\033[31m{0}\033[0m".format(msg))
 
-
-"""
-究极翻译脚本
-"""
 
 
 class MainQWidget(QMainWindow):

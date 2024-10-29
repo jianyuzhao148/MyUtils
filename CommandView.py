@@ -1,7 +1,8 @@
 """
-通过Json和PyQt 命令可视化
+通过Json和PyQt 将命令中参数通过UI可填写
 {
-    title:type
+    Command:"ls {}"
+    field:type
 }
 """
 import json
@@ -60,14 +61,15 @@ class MainQWidget(QMainWindow):
 
     def __on_click_start(self):
         code = os.system(config_cmd.format(self.content_list))
-        show_message("执行失败" if code == 0 else "执行成功")
+        show_message("执行成功" if code == 0 else "执行失败")
 
 
 if __name__ == "__main__":
-    with open("CommandViewConfig.json") as f:
+    with open("Res/CommandViewConfig.json") as f:
         temp_map = json.load(f)
         config_cmd = temp_map["Command"]
-        config_params = temp_map[1:]
+        del temp_map["Command"]
+        config_params = temp_map
     app = QApplication(sys.argv)
     dlg = MainQWidget()
     dlg.show()

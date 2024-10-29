@@ -1,3 +1,6 @@
+"""
+可视化文件选择器
+"""
 import os
 import shutil
 import sys

@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import QApplication, QPushButton, QDesktopWidget, QCheckBox
 import socket
 import asyncio
 
+from PyQt5.uic.properties import Properties
+
 from Util import Log, File, System
 from Util.File import Excel
 

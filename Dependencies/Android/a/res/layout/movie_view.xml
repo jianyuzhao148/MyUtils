@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout android:configChanges="keyboardHidden|orientation|screenSize" android:orientation="vertical" android:id="@id/movieRelativeLayout" android:background="@android:color/black" android:layout_width="fill_parent" android:layout_height="fill_parent"
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <SurfaceView android:id="@id/surfView" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_centerInParent="true" />
-    <FrameLayout android:id="@id/placeholder" android:background="@android:color/black" android:layout_width="fill_parent" android:layout_height="fill_parent" />
-</RelativeLayout>
