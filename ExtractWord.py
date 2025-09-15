@@ -2,7 +2,6 @@
 究极翻译脚本
 """
 
-
 import json
 import os
 import re
@@ -39,7 +38,6 @@ def ERROR(msg):
     print("\033[31m{0}\033[0m".format(msg))
 
 
-
 class MainQWidget(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -47,7 +45,7 @@ class MainQWidget(QMainWindow):
         self.put_xlsx_path = ""
         self.put_translate_xlsx_path = ""
         self.put_path = ""
-        self.include_last = [".m", ".mm"]
+        self.include_last = [".m", ".mm", ".lua"]
 
         self.__sheet_name = "word"
         self.__out_path = "Extract.xlsx"
@@ -361,7 +359,7 @@ def kimi_ask(word_list) -> list:
             sp_list = (translate_word.split("|"))
             sp_list.reverse()
             for j in range(0, len(sp_list)):
-                translate_list[i-j] = sp_list[j]
+                translate_list[i - j] = sp_list[j]
             temp_str = ""
     return translate_list
 

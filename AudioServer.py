@@ -19,11 +19,10 @@ class RadioHandler(http.server.BaseHTTPRequestHandler):
                 environ={'REQUEST_METHOD': 'POST'}
             )
 
+            # 文件内容
             file_item = form['file']
-            filename = form.getvalue('filename', 'default.zip')
-            if filename.split(".")[-1] != "zip":
-                self.last_audio_name = filename
-
+            # 设备信息，拼上时间戳保存为文件名
+            filename = form.getvalue('info', 'default')
             upload_dir = 'uploads'
             if not os.path.exists(upload_dir):
                 os.makedirs(upload_dir)
