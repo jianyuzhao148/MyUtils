@@ -1,62 +1,81 @@
 import os
 import shutil
-import sys
 from filecmp import cmp
+from typing import Callable
+
+def file_copy(file_path:str,target_path:str)->None:
+    """
+    文件拷贝
+    :param file_path: 文件路径
+    :param target_path: 目标路径
+    :return: None
+    """
+    # 检查目录
+    if not os.path.isfile(file_path):
+        print(f"{file_path}不是一个有效文件")
+        return
+    if not os.path.exists(target_path):
+        # 创建目录
+        os.mkdir(target_path)
+    shutil.copy2(file_path, target_path)
 
 
-def compare_directories(dir1, dir2, diffCall, notfindCall):
-    # 检查目录是否存在
-    if not os.path.exists(dir1) or not os.path.exists(dir2):
-        print(f"目录不存在: {dir1} 或 {dir2}")
+def path_compare(root_path: str, target_path: str, file_same_call: Callable[[str, str], None] = None,
+                 file_diff_call: Callable[[str, str], None] = None, file_miss_call: Callable[[str], None] = None)->None:
+    """
+    目录文件对比
+    :param root_path: 输入目录，所有文件以该目录为准
+    :param target_path: 对比目录
+    :param file_same_call: 文件相同回调，每有一个文件相同时就会回调
+    :param file_diff_call: 文件不同回调，每有一个文件不同时就会回调
+    :param file_miss_call: 文件缺失回调，每有一个文件缺失时就会回调
+    :return:None
+    """
+    # 检查目录
+    if not os.path.exists(root_path):
+        print(f"目录{root_path}不存在")
+        return
+    if not os.path.exists(target_path):
+        print(f"目录{target_path}不存在")
         return
 
-    # 遍历目录1中的所有文件和子目录
-    for root, dirs, files in os.walk(dir1):
-        # 计算相对路径，用于匹配目录2中的相同路径
-        relative_path = os.path.relpath(root, dir1)
-        dir2_path = os.path.join(dir2, relative_path)
+    for root, dirs, files in os.walk(root_path):
+        # 获取相对路径
+        relative_path = os.path.relpath(root, root_path)
+        target_base_path = os.path.join(target_path, relative_path)
 
-        # 对比文件
         for file in files:
-            file1_path = os.path.join(root, file)
-            file2_path = os.path.join(dir2_path, file)
+            # 两个文件的路径
+            root_file_path = os.path.join(root, file)
+            target_file_path = os.path.join(target_base_path, file)
 
-            if os.path.isfile(file2_path):
-                if cmp(file1_path, file2_path):
-                    # print(f"文件一致: {file1_path} {file2_path}")
-                    pass
+            if os.path.isfile(target_file_path):
+                if cmp(root_file_path, target_file_path):
+                    file_same_call and file_same_call(root_file_path, target_file_path)
                 else:
-                    # print(f"code -d {file1_path} {file2_path}")
-                    print(f"文件不一致: {file1_path} {file2_path}")
-                    diffCall({file1_path},{file2_path})
-                    # 创建多语言目录
-                    # shutil.copy2(file2_path, file1_path)
+                    file_diff_call and file_diff_call(root_file_path, target_file_path)
             else:
-                print(f"在 {dir2_path} 中找不到文件: {file}")
-                notfindCall(file)
-        # 对比子目录
-        for directory in dirs:
-            dir1_subdir = os.path.join(root, directory)
-            dir2_subdir = os.path.join(dir2_path, directory)
-            if not os.path.isdir(dir2_subdir):
-                print(f"目录 {dir2_subdir} 不存在")
+                file_miss_call and file_miss_call(root_file_path)
 
 
 # 使用方法
-dir1 = r"D:\LoVN\client\main\resource\image"
-dir2 = r"D:\Lo\client\main\resource\image"
+dir1 = r"/Users/zhaojyu/Documents/MyUtils"
+dir2 = r"/Users/zhaojyu/Documents"
 
-# 创建多语言目录
-localDir = dir1 + "\\cn"
-os.path.exists(localDir) or os.mkdir(localDir)
-
-
-def diffCall(root_path,com_path):
-    shutil.copy2(com_path,localDir);
+# # 创建多语言目录
+# localDir = dir1 + "\\cn"
+# os.path.exists(localDir) or os.mkdir(localDir)
 
 
-def nofindCall():
-    pass
+def diffCall(root_path, com_path)->None:
+    print("diff"+root_path,com_path)
+    # shutil.copy2(com_path, com_path);
+
+def missCall(root_path)->None:
+    print("miss"+root_path)
+
+# def nofindCall():
+#     pass
 
 
-compare_directories(dir1, dir2, diffCall, nofindCall)
+path_compare(dir1, dir2,file_diff_call=diffCall,file_miss_call=missCall)
